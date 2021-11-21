@@ -7,7 +7,10 @@
 
 
 typedef struct v2d {
-    float x, y;
+    union{
+        struct {float x, y;};
+        float raw[2];
+    };
 } v2d;
 
 typedef struct v2di {

@@ -21,6 +21,7 @@ extern inline v3d v3d_unit( v3d v );
 extern inline v3d v3d_perp(v3d v);
 extern inline float v3d_angle_between(v3d v, v3d u);
 extern inline v3d v3d_rotate(v3d v, v3d o, float rads);
+extern inline v3d v3d_cross(v3d v, v3d u);
 
 #define v3d_normal v3d_unit
 
@@ -85,7 +86,14 @@ v3d v3d_perp(v3d v){
     return perpV;
 }
 
-
+v3d v3d_cross(v3d v, v3d u){
+    v3d crossProduct = {
+        v.y*u.z - v.z*u.y,
+        v.z*u.x - v.x*u.z,
+        v.x*u.y - v.y*u.x
+    };
+    return crossProduct;
+}
 #endif
 
 #endif

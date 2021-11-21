@@ -46,19 +46,29 @@ Model modelInit(const char *filename){
             stbds_arrpush(model.da_vertices, v);
         }
         else if(!strncmp(line, "f ", 2)){
-            Uint32 *face = malloc(sizeof(float)*3);
+            Face face = {0};
             char *valBeginPtr = line + 2;
             Uint32 lineIdx = 2;
-            for(int i = 0; i < 3; i++){
-                char *endPtr;
-                face[i] = strtol(&line[lineIdx], &endPtr, 10);
-                face[i]--;
-                lineIdx = (uintptr_t)endPtr - (uintptr_t)line;
-                while(line[lineIdx] != ' ' || lineIdx == lineSize-1){
-                    lineIdx++;
-                }
+            char *endPtr;
+            face.i0 = strtol(&line[lineIdx], &endPtr, 10);
+            face.i0--;
+            while(line[lineIdx] != ' ' || lineIdx == lineSize-1){
                 lineIdx++;
             }
+            lineIdx++;
+            face.i1 = strtol(&line[lineIdx], &endPtr, 10);
+            face.i1--;
+            while(line[lineIdx] != ' ' || lineIdx == lineSize-1){
+                lineIdx++;
+            }
+            lineIdx++;
+            face.i2 = strtol(&line[lineIdx], &endPtr, 10);
+            face.i2--;
+            while(line[lineIdx] != ' ' || lineIdx == lineSize-1){
+                lineIdx++;
+            }
+            lineIdx++;
+
             stbds_arrpush(model.da_faces, face);
         }
         i++;

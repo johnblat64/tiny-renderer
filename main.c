@@ -9,8 +9,6 @@
 #include <SDL2/SDL.h>
 
 
-
-
 // Color Constants
 const SDL_Color BLUE = {0,0,255,255};
 const SDL_Color GREEN = {0,255,0,255};
@@ -56,8 +54,8 @@ inline void R_putPixel(v2d canvasPoint, SDL_Color color){
     // }
 
     // v2di screenPoint = canvasPointToScreenPoint(canvasPoint);
-
-    unsigned int idx = (canvasPoint.y * gWindowSurface->w) + canvasPoint.x;
+    v2di screenPoint = {canvasPoint.x, canvasPoint.y};
+    unsigned int idx = (screenPoint.y * gWindowSurface->w) + screenPoint.x;
     uint32_t colorU32 = SDL_MapRGBA(
         gWindowSurface->format,
         color.r,
@@ -181,6 +179,67 @@ void R_drawLineSolid(Line2d line, SDL_Color color){
 }
 
 
+
+v3d baycentric(v2d *pts, v2d P){
+    v3d pt0 = {
+        pts[2].x-pts[0].x,
+        pts[1].x-pts[0].x,
+        pts[0].x-P.x
+    };
+    v3d pt1 = {
+        pts[2].y-pts[0].y,
+        pts[1].y-pts[0].y,
+        pts[0].y-P.y
+    };
+    v3d u = v3d_cross(pt0, pt1);
+    if(fabsf(u.z) < 1){
+        return (v3d){-1, 1, 1};
+    }
+    return (v3d){
+        1.0f-(u.x+u.y)/u.z,
+        u.y/u.z,
+        u.x/u.z
+    };
+}
+
+
+void R_drawTriangle(v2d *vs, SDL_Color color){
+    //sort
+    v2d bboxMin = {
+        gCanvasDimensions.x-1,
+        gCanvasDimensions.y-1
+    };
+
+
+    v2d bboxMax = {0, 0};
+    v2d clamp = {gCanvasDimensions.x-1, gCanvasDimensions.y-1};
+    
+    for(int i = 0; i < 3; i++){
+        for(int j = 0; j < 2; j++){
+            bboxMin.raw[j] = max(0, min(bboxMin.raw[j], vs[i].raw[j]));
+            bboxMax.raw[j] = min(clamp.y, max(bboxMax.raw[j], vs[i].raw[j]));
+        }
+    }
+
+    v2d P = {0};
+    
+    for(P.x = bboxMin.x; P.x <= bboxMax.x; P.x++){
+        for(P.y = bboxMin.y; P.y <= bboxMax.y; P.y++){
+            v3d bcScreen = baycentric(vs, P);
+            
+            if(bcScreen.x < 0 || bcScreen.y < 0 || bcScreen.z < 0){
+                continue;
+            }
+            
+            R_putPixel(
+                (v2d){P.x, P.y},
+                color
+            );
+        }
+    }
+    
+}
+
 int main(){
     SDL_Init(SDL_INIT_VIDEO);
     gWindow = SDL_CreateWindow("Tiny Renderer", 0, 0, gCanvasDimensions.x, gCanvasDimensions.y, 0);
@@ -212,19 +271,41 @@ int main(){
         // R_drawLineSolid(line0, GREEN);
 
         for(int i = 0; i < stbds_arrlen(model.da_faces); i++){
-            Uint32 *face = model.da_faces[i];
+            Uint32 *face = (Uint32 * )&model.da_faces[i];
+            v2d screen_coords[3];
             for(int j = 0; j < 3; j++){
-                v3d v0 = model.da_vertices[face[j]];
-                v3d v1 = model.da_vertices[face[(j+1)%3]];
-                Line2d line = {
-                    (v2d){(v0.x+1.0f)*gCanvasDimensions.x*0.5, (-v0.y+1.0f)*gCanvasDimensions.y*0.5},
-                    (v2d){(v1.x+1.0f)*gCanvasDimensions.x*0.5, (-v1.y+1.0f)*gCanvasDimensions.y*0.5}
+                v3d worldCoords = model.da_vertices[face[j]];
+                screen_coords[j] = (v2d){
+                    (worldCoords.x+1)*gCanvasDimensions.x/2.0f,
+                    (-worldCoords.y+1)*gCanvasDimensions.y/2.0f
                 };
-                R_drawLineSolid(line, GREEN);
+                
+                // v3d v0 = model.da_vertices[face[j]];
+                // v3d v1 = model.da_vertices[face[(j+1)%3]];
+                // Line2d line = {
+                //     (v2d){(v0.x+1.0f)*gCanvasDimensions.x*0.5, (-v0.y+1.0f)*gCanvasDimensions.y*0.5},
+                //     (v2d){(v1.x+1.0f)*gCanvasDimensions.x*0.5, (-v1.y+1.0f)*gCanvasDimensions.y*0.5}
+                // };
+                // R_drawLineSolid(line, GREEN);
             }
+            R_drawTriangle(
+                screen_coords,
+                (SDL_Color){
+                    rand()%255,
+                    rand()%255,
+                    rand()%255,
+                    255
+                }
+            );
         }
+        // v2d vs[3] = {
+        //     (v2d){10,10},
+        //     (v2d){100,30},
+        //     (v2d){190,160}
+        // };
+        // R_drawTriangle(vs, GREEN);
         SDL_UpdateWindowSurface(gWindow);
-        SDL_Delay(10);
+        SDL_Delay(50);
     }
 
     exit(EXIT_SUCCESS);
