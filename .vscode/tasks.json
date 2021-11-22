@@ -7,8 +7,8 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
-                "${workspaceFolder}/main.c",
-                "${workspaceFolder}/model.c",
+                "${workspaceFolder}/main.cpp",
+                "${workspaceFolder}/model.cpp",
                 "-o",
                 "${workspaceFolder}/app",
                 "-I/usr/include/SDL2",

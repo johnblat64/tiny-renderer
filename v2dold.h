@@ -2,39 +2,23 @@
 #define v2d_h
 
 #include <math.h>
-#include <inttypes.h>
-#include <assert.h>
 
 #define PI 3.14159265358979323846
 
-// union v2d {
-//     struct {}
-// }
-struct v2d {
-    // float x, y;
+
+typedef struct v2d {
     union{
         struct {float x, y;};
         float raw[2];
     };
-
     #ifdef __cplusplus
-    // v2d(float x, float y){
-    //     raw[0] = x;
-    //     raw[1] = y;
-    // // };
-    // float operator[](const uint32_t i){
-    //     assert(i >= 0 && i <= 1);
-    //     return raw[i];
-    // }
-    #endif // __cplusplus
-};
+    v2d operator++()
+    #endif
+} v2d;
 
- 
 typedef struct v2di {
     int x, y;
 } v2di;
-
-
 
 
 extern inline v2d v2d_add(v2d a, v2d b);
@@ -104,33 +88,15 @@ v2d v2d_rotate(v2d v, v2d o, float rads){
     rotatedV.y = subtracted.x * s + subtracted.y * c;
     return rotatedV;
 }
-    
+
+
 v2d v2d_perp(v2d v){
     v2d perpV = v2d_rotate(v, (v2d){0,0}, -(PI * 0.5));
     return perpV;
 }
 
-#ifdef __cplusplus
-
-inline v2d operator+(const v2d lhs, const v2d rhs){
-     return v2d_add(lhs, rhs);
-}
-
-inline v2d operator-(v2d lhs, v2d rhs){
-    return v2d_sub(lhs, rhs);
-}
-
-inline v2d operator*(double lhs, v2d rhs){
-    return v2d_scale(lhs, rhs);
-}
-   
-inline v2d operator*(v2d lhs, double rhs){
-    return v2d_scale(rhs, lhs);
-}
+#endif
 
 
-#endif // __cplusplus
 
-#endif // V2D_IMPLEMENTATION
-
-#endif // header guard
+#endif

@@ -19,6 +19,7 @@ const SDL_Color PURPLE = {255,0,255,255};
 const SDL_Color WHITE = {255,255,255,255};
 const SDL_Color DARK_MODE = {25,25,25,255};
 
+v3d gLightDir = {0,0,-1};
 
 #define max(a,b)(a > b ? a : b)
 #define min(a,b)(a < b ? a : b)
@@ -28,7 +29,7 @@ const SDL_Color DARK_MODE = {25,25,25,255};
 // Conversions etc
 static SDL_Window *gWindow;
 static SDL_Surface *gWindowSurface;
-static uint32_t *gWindowPixels;
+static Uint32 *gWindowPixels;
 static v2di gCanvasDimensions = {640,640};
 static v2d gViewport;
 static float gViewportDistanceFromCamera = 1.0f;
@@ -39,8 +40,8 @@ void R_putPixel(v2d worldPoint, SDL_Color color);
 
 inline v2di canvasPointToScreenPoint(v2d canvasPoint){
     v2di px = {
-        .x = (gCanvasDimensions.x >> 1) + canvasPoint.x,
-        .y = (gCanvasDimensions.y >> 1) - canvasPoint.y
+        (gCanvasDimensions.x >> 1) + (int)canvasPoint.x,
+        (gCanvasDimensions.y >> 1) - (int)canvasPoint.y
     };
     return px;
 }
@@ -54,7 +55,7 @@ inline void R_putPixel(v2d canvasPoint, SDL_Color color){
     // }
 
     // v2di screenPoint = canvasPointToScreenPoint(canvasPoint);
-    v2di screenPoint = {canvasPoint.x, canvasPoint.y};
+    v2di screenPoint = {(int)canvasPoint.x, (int)canvasPoint.y};
     unsigned int idx = (screenPoint.y * gWindowSurface->w) + screenPoint.x;
     uint32_t colorU32 = SDL_MapRGBA(
         gWindowSurface->format,
@@ -101,8 +102,8 @@ v2d projectWorldVertex(v3d worldVertex){
 
 void swapPoints(v2d *p0, v2d *p1){
     v2d temp = {
-        .x = p0->x,
-        .y = p0->y
+        p0->x,
+        p0->y
     };
 
     p0->x = p1->x;
@@ -155,8 +156,8 @@ void R_drawLineSolid(Line2d line, SDL_Color color){
         if(steep){
             R_putPixel(
                 (v2d){
-                    .x = y,
-                    .y = x
+                    (float)y,
+                    (float)x
                 },
                 color
             );
@@ -164,8 +165,8 @@ void R_drawLineSolid(Line2d line, SDL_Color color){
         else {
             R_putPixel(
                 (v2d){
-                    .x = x,
-                    .y = y
+                    (float)x,
+                    (float)y
                 },
                 color
             );
@@ -192,7 +193,7 @@ v3d baycentric(v2d *pts, v2d P){
         pts[0].y-P.y
     };
     v3d u = v3d_cross(pt0, pt1);
-    if(fabsf(u.z) < 1){
+    if(fabsf(u.z) < 1.0f){
         return (v3d){-1, 1, 1};
     }
     return (v3d){
@@ -206,25 +207,25 @@ v3d baycentric(v2d *pts, v2d P){
 void R_drawTriangle(v2d *vs, SDL_Color color){
     //sort
     v2d bboxMin = {
-        gCanvasDimensions.x-1,
-        gCanvasDimensions.y-1
+        (float)gCanvasDimensions.x,
+        (float)gCanvasDimensions.y
     };
 
 
     v2d bboxMax = {0, 0};
-    v2d clamp = {gCanvasDimensions.x-1, gCanvasDimensions.y-1};
+    v2d clamp = {(float)gCanvasDimensions.x, (float)gCanvasDimensions.y};
     
     for(int i = 0; i < 3; i++){
         for(int j = 0; j < 2; j++){
             bboxMin.raw[j] = max(0, min(bboxMin.raw[j], vs[i].raw[j]));
-            bboxMax.raw[j] = min(clamp.y, max(bboxMax.raw[j], vs[i].raw[j]));
+            bboxMax.raw[j] = min(clamp.raw[j], max(bboxMax.raw[j], vs[i].raw[j]));
         }
     }
 
     v2d P = {0};
-    
-    for(P.x = bboxMin.x; P.x <= bboxMax.x; P.x++){
-        for(P.y = bboxMin.y; P.y <= bboxMax.y; P.y++){
+  
+    for(P.y = bboxMin.y; P.y <= bboxMax.y; P.y++){
+        for(P.x = bboxMin.x; P.x <= bboxMax.x; P.x++){
             v3d bcScreen = baycentric(vs, P);
             
             if(bcScreen.x < 0 || bcScreen.y < 0 || bcScreen.z < 0){
@@ -235,16 +236,65 @@ void R_drawTriangle(v2d *vs, SDL_Color color){
                 (v2d){P.x, P.y},
                 color
             );
+            
+                // SDL_Delay(50);
+                // SDL_UpdateWindowSurface(gWindow);
+            
+                
         }
     }
     
+}
+
+void R_drawTriangle2(v2d *vs, SDL_Color color){
+    if(vs[0].y==vs[1].y && vs[0].y == vs[2].y){
+        return;
+    }
+
+    if(vs[0].y > vs[1].y){
+        swapValues(vs[0], vs[1], v2d);
+    }
+    if(vs[0].y > vs[2].y){
+        swapValues(vs[0], vs[2], v2d);
+    }
+    if(vs[1].y > vs[2].y){
+        swapValues(vs[1], vs[2], v2d);
+    }
+
+    int totalHeight = vs[2].y - vs[0].y;
+
+    for(int i = 0; i < totalHeight; i++){
+        bool secondHalf = i > vs[1].y - vs[0].y || vs[1].y == vs[0].y;
+        int segmentHeight = secondHalf ? vs[2].y - vs[1].y : vs[1].y - vs[0].y;
+        float alpha = (float)i/(float)totalHeight;
+        float beta = (float)(i-(secondHalf ? vs[1].y - vs[0].y : 0)) / (float)segmentHeight;
+        
+        v2d A = v2d_add(vs[0], v2d_scale(alpha, v2d_sub(vs[2], vs[0])));
+        v2d B = secondHalf ? v2d_add(vs[1], v2d_scale(beta, v2d_sub(vs[2],vs[1]))) : v2d_add(vs[0], v2d_scale( beta, v2d_sub(vs[1], vs[0])));
+
+        if(A.x>B.x){
+            swapValues(A, B, v2d);
+        }
+        for(int j = A.x; j <= B.x; j++){
+            R_putPixel(
+                (v2d){
+                    (float)j,
+                    vs[0].y+i
+                },
+                color
+            );
+             SDL_Delay(10);
+                SDL_UpdateWindowSurface(gWindow);
+        }
+    }
+
 }
 
 int main(){
     SDL_Init(SDL_INIT_VIDEO);
     gWindow = SDL_CreateWindow("Tiny Renderer", 0, 0, gCanvasDimensions.x, gCanvasDimensions.y, 0);
     gWindowSurface = SDL_GetWindowSurface(gWindow);
-    gWindowPixels = gWindowSurface->pixels;
+    gWindowPixels = (Uint32 *)gWindowSurface->pixels;
 
     Model model = modelInit("african-head.obj");
 
@@ -272,31 +322,35 @@ int main(){
 
         for(int i = 0; i < stbds_arrlen(model.da_faces); i++){
             Uint32 *face = (Uint32 * )&model.da_faces[i];
-            v2d screen_coords[3];
+            v2d screenCoords[3];
+            v3d worldCoords[3];
             for(int j = 0; j < 3; j++){
-                v3d worldCoords = model.da_vertices[face[j]];
-                screen_coords[j] = (v2d){
-                    (worldCoords.x+1)*gCanvasDimensions.x/2.0f,
-                    (-worldCoords.y+1)*gCanvasDimensions.y/2.0f
+                v3d v = model.da_vertices[face[j]];
+                screenCoords[j] = (v2d){
+                    (v.x+1)*gCanvasDimensions.x/2.0f,
+                    (-v.y+1)*gCanvasDimensions.y/2.0f
                 };
-                
-                // v3d v0 = model.da_vertices[face[j]];
-                // v3d v1 = model.da_vertices[face[(j+1)%3]];
-                // Line2d line = {
-                //     (v2d){(v0.x+1.0f)*gCanvasDimensions.x*0.5, (-v0.y+1.0f)*gCanvasDimensions.y*0.5},
-                //     (v2d){(v1.x+1.0f)*gCanvasDimensions.x*0.5, (-v1.y+1.0f)*gCanvasDimensions.y*0.5}
-                // };
-                // R_drawLineSolid(line, GREEN);
+                worldCoords[j] = v;
             }
-            R_drawTriangle(
-                screen_coords,
-                (SDL_Color){
-                    rand()%255,
-                    rand()%255,
-                    rand()%255,
-                    255
-                }
-            );
+            v3d a = v3d_sub(worldCoords[2], worldCoords[0]);
+            v3d b = v3d_sub(worldCoords[1], worldCoords[0]);
+            v3d n = v3d_cross(a, b);
+            n = v3d_normal(n);
+
+            float lightIntensity = v3d_dot(n, gLightDir);
+
+            if(lightIntensity > 0){
+                R_drawTriangle(
+                    screenCoords,
+                    (SDL_Color){
+                        (Uint8)(lightIntensity*255),
+                        (Uint8)(lightIntensity*255),
+                        (Uint8)(lightIntensity*255),
+                        255
+                    }
+                );
+            }
+            
         }
         // v2d vs[3] = {
         //     (v2d){10,10},
