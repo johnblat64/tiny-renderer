@@ -182,25 +182,43 @@ void R_drawLineSolid(Line2d line, SDL_Color color){
 
 
 v3d baycentric(v2d *pts, v2d P){
-    v3d pt0 = {
-        pts[2].x-pts[0].x,
-        pts[1].x-pts[0].x,
-        pts[0].x-P.x
-    };
-    v3d pt1 = {
-        pts[2].y-pts[0].y,
-        pts[1].y-pts[0].y,
-        pts[0].y-P.y
-    };
-    v3d u = v3d_cross(pt0, pt1);
-    if(fabsf(u.z) < 1.0f){
-        return (v3d){-1, 1, 1};
-    }
-    return (v3d){
-        1.0f-(u.x+u.y)/u.z,
-        u.y/u.z,
-        u.x/u.z
-    };
+    // v3d pt0 = {
+    //     pts[2].x-pts[0].x,
+    //     pts[1].x-pts[0].x,
+    //     pts[0].x-P.x
+    // };
+    // v3d pt1 = {
+    //     pts[2].y-pts[0].y,
+    //     pts[1].y-pts[0].y,
+    //     pts[0].y-P.y
+    // };
+    // v3d u = v3d_cross(pt0, pt1);
+    // if(fabsf(u.z) < 1.0f){
+    //     return (v3d){-1, 1, 1};
+    // }
+    // return (v3d){
+    //     1.0f-(u.x+u.y)/u.z,
+    //     u.y/u.z,
+    //     u.x/u.z
+    // };
+    // v2d pts2 = pts;
+    // pts
+    v2d v0 = pts[1] - pts[0];
+    v2d v1 = pts[2] - pts[0];
+    v2d v2 = P - pts[0];
+
+    float d00 = v0 * v0;
+    float d01 = v0 * v1;
+    float d11 = v1 * v1;
+    float d20 = v2 * v0;
+    float d21 = v2 * v1;
+    
+    float v = (d11 * d20 - d01 * d21) / (d00 * d11 - d01 * d01);
+    float w = (d00 * d21 - d01 * d20) / (d00 * d11 - d01 * d01);
+    float u = 1.0f - v - w;
+
+    return v3d(v, w, u); 
+
 }
 
 
@@ -217,18 +235,18 @@ void R_drawTriangle(v2d *vs, SDL_Color color){
     
     for(int i = 0; i < 3; i++){
         for(int j = 0; j < 2; j++){
-            bboxMin.raw[j] = max(0, min(bboxMin.raw[j], vs[i].raw[j]));
-            bboxMax.raw[j] = min(clamp.raw[j], max(bboxMax.raw[j], vs[i].raw[j]));
+            bboxMin[j] = max(0, min(bboxMin[j], vs[i][j]));
+            bboxMax[j] = min(clamp[j], max(bboxMax[j], vs[i][j]));
         }
     }
 
-    v2d P = {0};
+    v2d P = {0, 0};
   
-    for(P.y = bboxMin.y; P.y <= bboxMax.y; P.y++){
-        for(P.x = bboxMin.x; P.x <= bboxMax.x; P.x++){
+    for(P.y = (int)bboxMin.y; P.y <= (int)bboxMax.y; P.y++){
+        for(P.x = (int)bboxMin.x; P.x <= (int)bboxMax.x; P.x++){
             v3d bcScreen = baycentric(vs, P);
             
-            if(bcScreen.x < 0 || bcScreen.y < 0 || bcScreen.z < 0){
+            if(bcScreen.x < 0.0f || bcScreen.y < 0.0f || bcScreen.z < 0.0f){
                 continue;
             }
             
@@ -297,6 +315,9 @@ int main(){
     gWindowPixels = (Uint32 *)gWindowSurface->pixels;
 
     Model model = modelInit("african-head.obj");
+    // for(int i = 0; i < stbds_arrlen(model.da_vertices); i++){
+    //     model.da_vertices[i].y-=0.99;
+    // }
 
     SDL_bool quit = SDL_FALSE;
     SDL_Event event;
@@ -332,13 +353,13 @@ int main(){
                 };
                 worldCoords[j] = v;
             }
-            v3d a = v3d_sub(worldCoords[2], worldCoords[0]);
-            v3d b = v3d_sub(worldCoords[1], worldCoords[0]);
+            v3d a = worldCoords[2] - worldCoords[0];
+            v3d b = worldCoords[1] - worldCoords[0];
             v3d n = v3d_cross(a, b);
             n = v3d_normal(n);
 
             float lightIntensity = v3d_dot(n, gLightDir);
-
+          
             if(lightIntensity > 0){
                 R_drawTriangle(
                     screenCoords,

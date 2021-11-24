@@ -12,20 +12,18 @@
 // }
 struct v2d {
     // float x, y;
-    union{
-        struct {float x, y;};
-        float raw[2];
-    };
+    float x, y;
 
     #ifdef __cplusplus
-    // v2d(float x, float y){
-    //     raw[0] = x;
-    //     raw[1] = y;
-    // // };
-    // float operator[](const uint32_t i){
-    //     assert(i >= 0 && i <= 1);
-    //     return raw[i];
-    // }
+
+    v2d(float X, float Y) : x(X), y(Y) {}
+    v2d() : x(0), y(0) {}
+
+    float &operator[](const uint32_t i){
+        assert(i >= 0 && i <= 1);
+        return i == 0 ? x : y;
+    }
+
     #endif // __cplusplus
 };
 
@@ -128,6 +126,9 @@ inline v2d operator*(v2d lhs, double rhs){
     return v2d_scale(rhs, lhs);
 }
 
+inline float operator*(v2d lhs, v2d rhs){
+    return v2d_dot(lhs, rhs);
+}
 
 #endif // __cplusplus
 

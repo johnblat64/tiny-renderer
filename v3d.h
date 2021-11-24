@@ -2,13 +2,32 @@
 #define v3d_h
 
 #include <math.h>
+#include <inttypes.h>
+#include <assert.h>
 
 #define PI 3.14159265358979323846
 
 
-typedef struct v3d {
+/**
+ * HEADER ONLY
+ */
+struct v3d {
     float x, y, z;
-} v3d;
+
+    v3d(float X, float Y, float Z) : x(X), y(Y), z(Z) {}
+    v3d() : x(0), y(0), z(0) {}
+
+    float &operator[](const uint32_t i){
+        assert(i >= 0 && i <= 1);
+        return 
+            (i == 0) ?
+            x : 
+            (i == 1 ) ?
+            y :
+            z;
+    }   
+
+};
 
 
 extern inline v3d v3d_add(v3d a, v3d b);
@@ -25,6 +44,10 @@ extern inline v3d v3d_cross(v3d v, v3d u);
 
 #define v3d_normal v3d_unit
 
+
+/**
+ * IMPLEMENTATION DETAILS
+ */
 #ifdef V3D_IMPLEMENTATION
 
 v3d v3d_add(v3d a, v3d b){
@@ -82,9 +105,10 @@ v3d v3d_rotate(v3d v, v3d o, float rads){
 
 // ????
 v3d v3d_perp(v3d v){
-    v3d perpV = v3d_rotate(v, (v3d){0,0}, -(PI * 0.5));
+    v3d perpV = v3d_rotate(v, v3d(0,0,0), -(PI * 0.5));
     return perpV;
 }
+
 
 v3d v3d_cross(v3d v, v3d u){
     v3d crossProduct = {
@@ -94,6 +118,34 @@ v3d v3d_cross(v3d v, v3d u){
     };
     return crossProduct;
 }
+
+
+/**
+ * OVERLOADS
+ */
+
+inline v3d operator+(const v3d lhs, const v3d rhs){
+     return v3d_add(lhs, rhs);
+}
+
+inline v3d operator-(v3d lhs, v3d rhs){
+    return v3d_sub(lhs, rhs);
+}
+
+inline v3d operator*(double lhs, v3d rhs){
+    return v3d_scale(lhs, rhs);
+}
+   
+inline v3d operator*(v3d lhs, double rhs){
+    return v3d_scale(rhs, lhs);
+}
+
+inline float operator*(v3d lhs, v3d rhs){
+    return v3d_dot(lhs, rhs);
+}
+
+
+
 #endif
 
 #endif
