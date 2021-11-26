@@ -28,9 +28,21 @@ struct v2d {
 };
 
  
-typedef struct v2di {
+struct v2di {
     int x, y;
-} v2di;
+
+    #ifdef __cplusplus
+
+    v2di(float X, float Y) : x(X), y(Y) {}
+    v2di() : x(0), y(0) {}
+
+    int &operator[](const uint32_t i){
+        assert(i >= 0 && i <= 1);
+        return i == 0 ? x : y;
+    }
+
+    #endif // __cplusplus
+};
 
 
 

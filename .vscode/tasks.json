@@ -9,6 +9,7 @@
                 "-g",
                 "${workspaceFolder}/main.cpp",
                 "${workspaceFolder}/model.cpp",
+                "${workspaceFolder}/globals.cpp",
                 "-o",
                 "${workspaceFolder}/app",
                 "-I/usr/include/SDL2",

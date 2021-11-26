@@ -18,7 +18,7 @@ struct v3d {
     v3d() : x(0), y(0), z(0) {}
 
     float &operator[](const uint32_t i){
-        assert(i >= 0 && i <= 1);
+        assert(i >= 0 && i <= 2);
         return 
             (i == 0) ?
             x : 
