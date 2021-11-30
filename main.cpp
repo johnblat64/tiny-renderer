@@ -1,5 +1,6 @@
 #define STB_DS_IMPLEMENTATION
 #include "stb_ds.h"
+#undef STB_DS_IMPLEMENTATION
 #define V3D_IMPLEMENTATION
 #include "v3d.h"
 #define V2D_IMPLEMENTATION
@@ -12,6 +13,8 @@
 #define STBI_ONLY_TGA
 #include "stb_image.h"
 #include "globals.h"
+#include "matrix.h"
+#include "memory.h"
 
 
 // Color Constants
@@ -23,6 +26,8 @@ const SDL_Color YELLOW = {255,255,0,255};
 const SDL_Color PURPLE = {255,0,255,255};
 const SDL_Color WHITE = {255,255,255,255};
 const SDL_Color DARK_MODE = {25,25,25,255};
+
+v3d camera(0,0,3);
 
 v3d gLightDir = {0,0,-1};
 
@@ -297,9 +302,10 @@ void R_drawTriangleTextured(v3d *vertices, SDL_Color *texture, float lightIntens
             else {
                 printf("not!\n");
             }
-            
-                // SDL_Delay(50);
-                // SDL_UpdateWindowSurface(gWindow);
+            // if((int)P.x % 8 == 0){
+            // SDL_UpdateWindowSurface(gWindow);
+
+            // }
             
                 
         }
@@ -408,7 +414,46 @@ void R_drawTriangle(v3d *vs, SDL_Color color){
 
 // }
 
+const uint32_t depth = 255;
+
+Matrix v2m(v3d v){
+    Matrix m(4, 1);
+    m[0][0] = v.x;
+    m[1][0] = v.y;
+    m[2][0] = v.z;
+    m[3][0] = 1.0f;
+
+    return m;
+}
+
+v3d m2v(Matrix m){
+    v3d v(
+        m[0][0]/m[3][0],
+        m[1][0]/m[3][0],
+        m[2][0]/m[3][0]
+    );
+    return v;
+}
+
+Matrix genViewport(int x, int y, int w, int h){
+    Matrix m = genIdMatrix(4);
+    m[0][0] = x+w/2.0f;
+    m[1][3] = y+h/2.0f;
+    m[2][3] = depth/2.0f;
+
+    m[0][0] = w/2.0f;
+    m[1][1] = h/2.0f;
+    m[2][2] = depth/2.0f;
+
+    return m; 
+}
+
 int main(){
+    byte backingMemory[DEFAULT_MEMORY_TOTAL];
+    //mem
+    gMemoryArena = memoryArenaInit(backingMemory, DEFAULT_MEMORY_TOTAL);
+
+    //other
     SDL_Init(SDL_INIT_VIDEO);
     gWindow = SDL_CreateWindow("Tiny Renderer", 0, 0, gCanvasDimensions.x, gCanvasDimensions.y, 0);
     gWindowSurface = SDL_GetWindowSurface(gWindow);
@@ -425,6 +470,15 @@ int main(){
     for(int i = 0; i < gCanvasDimensions.x * gCanvasDimensions.y; i++){
         g_zBuffer[i] =  -FLT_MAX;
     }
+
+    Matrix projectionMatrix = genIdMatrix(4);
+    Matrix viewportMatrix = genViewport(
+        gCanvasDimensions.x/8,
+        gCanvasDimensions.y/8,
+        gCanvasDimensions.x*3/4, 
+        gCanvasDimensions.y*3/4
+    );
+    projectionMatrix[3][2] = -1.0f/camera.z;
 
     SDL_bool quit = SDL_FALSE;
     SDL_Event event;

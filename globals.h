@@ -10,6 +10,6 @@ extern SDL_Surface *gWindowSurface;
 extern Uint32 *gWindowPixels;
 extern v2di gCanvasDimensions;
 extern v2d gViewport;
-extern float gViewportDistanceFromCamera;;
+extern float gViewportDistanceFromCamera;
 
 #endif

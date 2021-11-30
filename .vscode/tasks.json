@@ -10,6 +10,7 @@
                 "${workspaceFolder}/main.cpp",
                 "${workspaceFolder}/model.cpp",
                 "${workspaceFolder}/globals.cpp",
+                "${workspaceFolder}/memory.cpp",
                 "-o",
                 "${workspaceFolder}/app",
                 "-I/usr/include/SDL2",
