@@ -45,6 +45,23 @@ Matrix genIdMatrix(int n){
     return m;
 }
 
+Matrix operator*(Matrix lhs, Matrix rhs){
+    if(lhs.nCols != rhs.nRows){
+        assert(0 && "lhs.nCols != rhs.nRows in matrix multiplication");
+    }
+
+    Matrix result(lhs.nRows, rhs.nCols);
+    for(int i = 0; i < lhs.nRows; i++){
+        for(int j = 0; j < rhs.nCols; j++){
+            result[i][j] = 0.0f;
+            for(int k = 0; k < lhs.nCols; k++){
+                result[i][j] += lhs[i][k] * rhs[k][j];
+            }
+        }
+    }
+
+    return result;
+}
 
 
 #endif
