@@ -5,39 +5,8 @@
 #include "memory.h"
 
 struct Matrix{   
-    struct row {
-        /**
-         * @brief This internal struct just serves
-         * as a error prevention tactic by checking
-         * the bounds of the array
-         * 
-         */
-        float *da;
-        size_t size;
-        
-        row(uint32_t n){
-            da = NULL;
-            float v = 0;
-            for(int i = 0; i < n; i++)
-                stbds_arrpush(da, v);
-        }
 
-        float &operator[](const uint32_t i){
-            assert(i >= 0 && i < stbds_arrlen(da));
-            return da[i];
-        } 
-    };
-    /**
-     * @brief 
-     * ACTUAL MATRIX
-     * 
-     * It uses stb_ds behind the scenes, 
-     * so calling stbds_arrlen() on either of the arrays will give you 
-     * the sizes
-     * 
-     */
-
-    float *arr;
+    float **arr;
     size_t nRows;
     size_t nCols;
     
@@ -46,19 +15,16 @@ struct Matrix{
 
         float v = 0.0f;
         size_t allocationSize = (sizeof(float) * r * c);
-        arr = (float *)memoryArenaAllocate(&gMemoryArena, allocationSize);
-        // memset(arr, 0, allocationSize);
-        // da_rows = NULL;
-        
-        // for(int r = 0; r < nRows; r++){
-        //     row aRow = row(nCols);            
-        //     stbds_arrpush(da_rows, aRow);
-        // }
+        arr = (float **)memoryArenaAllocate(&gMemoryArena, sizeof(float *) * r);
+        arr[0] = (float *)memoryArenaAllocate(&gMemoryArena, sizeof(float) * c * r);
+        for(int i = 0; i < r; i++){
+            arr[i] = arr[0] + i * c;
+        }
+
     }
 
-    float *operator[](const uint32_t i){
-        float *ptr = arr+i;
-        return ptr;
+    float * &operator[](const uint32_t i){
+        return arr[i];
     } 
 
     uint32_t rows(){
