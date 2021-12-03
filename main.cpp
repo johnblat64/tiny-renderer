@@ -416,36 +416,45 @@ void R_drawTriangle(v3d *vs, SDL_Color color){
 
 const uint32_t depth = 255;
 
-Matrix v2m(v3d v){
-    Matrix m(4, 1);
-    m[0][0] = v.x;
-    m[1][0] = v.y;
-    m[2][0] = v.z;
-    m[3][0] = 1.0f;
+// Matrix v2m(v3d v){
+//     Matrix m(4, 1);
+//     m[0][0] = v.x;
+//     m[1][0] = v.y;
+//     m[2][0] = v.z;
+//     m[3][0] = 1.0f;
 
-    return m;
-}
+//     return m;
+// }
 
-v3d m2v(Matrix m){
+// v3d m2v(Matrix m){
+//     v3d v(
+//         m[0][0]/m[3][0],
+//         m[1][0]/m[3][0],
+//         m[2][0]/m[3][0]
+//     );
+//     return v;
+// }
+
+v3d m2v(TransformMatrix tm){
     v3d v(
-        m[0][0]/m[3][0],
-        m[1][0]/m[3][0],
-        m[2][0]/m[3][0]
+        tm.m[0][0]/tm.m[3][0],
+        tm.m[1][0]/tm.m[3][0],
+        tm.m[2][0]/tm.m[3][0]
     );
     return v;
 }
 
-Matrix genViewport(int x, int y, int w, int h){
-    Matrix m = genIdMatrix(4);
-    m[0][0] = x+w/2.0f;
-    m[1][3] = y+h/2.0f;
-    m[2][3] = depth/2.0f;
+TransformMatrix genViewportTransformMatrix(int x, int y, int w, int h){
+    TransformMatrix tm = genIdTransformMatrix(4);
+    tm.m[0][3] = x+w/2.0f;
+    tm.m[1][3] = y+h/2.0f;
+    tm.m[2][3] = depth/2.0f;
 
-    m[0][0] = w/2.0f;
-    m[1][1] = h/2.0f;
-    m[2][2] = depth/2.0f;
+    tm.m[0][0] = w/2.0f;
+    tm.m[1][1] = h/2.0f;
+    tm.m[2][2] = depth/2.0f;
 
-    return m; 
+    return tm; 
 }
 
 int main(){
@@ -471,14 +480,7 @@ int main(){
         g_zBuffer[i] =  -FLT_MAX;
     }
 
-    Matrix projectionMatrix = genIdMatrix(4);
-    Matrix viewportMatrix = genViewport(
-        gCanvasDimensions.x/8,
-        gCanvasDimensions.y/8,
-        gCanvasDimensions.x*3/4, 
-        gCanvasDimensions.y*3/4
-    );
-    projectionMatrix[3][2] = -1.0f/camera.z;
+    
 
     SDL_bool quit = SDL_FALSE;
     SDL_Event event;
@@ -488,6 +490,18 @@ int main(){
                 quit = SDL_TRUE;
             }
         }
+
+        memoryArenaFree(&gMemoryArena);
+
+        TransformMatrix projectionMatrix = genIdTransformMatrix(4);
+        TransformMatrix viewportMatrix = genViewportTransformMatrix(
+            gCanvasDimensions.x/8,
+            gCanvasDimensions.y/8,
+            gCanvasDimensions.x*3/4, 
+            gCanvasDimensions.y*3/4
+        );
+        projectionMatrix.m[3][2] = -1.0f/camera.z;
+
         Line2d line0 = {
             (v2d){50,50},
             (v2d){100,100}
@@ -502,26 +516,36 @@ int main(){
 
         // R_drawLineSolid(line0, GREEN);
 
+        // uint32_t nFaces = stbds_arrlen(model.da_faces);
         for(int i = 0; i < stbds_arrlen(model.da_faces); i++){
 
             // for(int i = 0; i < gCanvasDimensions.x * gCanvasDimensions.y; i++){
             //     g_zBuffer[i] =  FLT_MIN;
             // }      
+            if(i > 2492){
+                printf("what?\n");
+            }
             Face vFace = model.da_faces[i];
             Face tFace = model.da_textureFaces[i];
 
             v3d screenCoords[3];
+            v3d xscreenCoords[3];
+
             v3d worldCoords[3];
             v2di textureCoords[3];
             
             for(int j = 0; j < 3; j++){
                 v3d v = model.da_vertices[vFace[j]];
+                v4d v1 = v4d(v.x, -v.y, v.z, 1.0f);
                 v2d vtc = model.da_textureCoordinates[tFace[j]];
-                screenCoords[j] = (v3d){
+                xscreenCoords[j] = (v3d){
                     (v.x+1)*gCanvasDimensions.x/2.0f,
                     (-v.y+1)*gCanvasDimensions.y/2.0f,
                     v.z // keep the z for a z buffer
                 };
+                screenCoords[j] = m2v(viewportMatrix * projectionMatrix * v1);
+                // screenCoords[j].y *= -1;
+
                 worldCoords[j] = v;
 
                 textureCoords[j] = v2di( 
