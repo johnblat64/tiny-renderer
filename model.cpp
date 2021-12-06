@@ -11,7 +11,9 @@
 Model modelInit(const char *filename){
     Model model;
     model.da_vertices = NULL;
+    model.da_normals = NULL;
     model.da_faces = NULL;
+    model.da_normalFaces = NULL;
     model.da_textureCoordinates = NULL;
     model.da_textureFaces = NULL;
     model.da_texture = NULL;
@@ -51,6 +53,21 @@ Model modelInit(const char *filename){
             
             stbds_arrpush(model.da_vertices, v);
         }
+        else if(!strncmp(line, "vn", 2)){
+            v3d n;
+
+            char *valBeginPtr = line + 2;
+            
+            char *endPtr;
+            n.x = strtof(valBeginPtr, &endPtr);
+            valBeginPtr = endPtr + 1;
+            n.y = strtof(valBeginPtr, &endPtr);
+            valBeginPtr = endPtr + 1;
+            n.z = strtof(valBeginPtr, &endPtr); 
+
+            stbds_arrpush(model.da_normals, n);
+
+        }
         else if(!strncmp(line, "vt", 2)){
             v2d v;
             char *valBeginPtr = line + 2;
@@ -64,6 +81,8 @@ Model modelInit(const char *filename){
         else if(!strncmp(line, "f ", 2)){
             Face vFace = {0};
             Face tFace = {0};
+            Face nFace = {0};
+
             char *valBeginPtr = line + 2;
             Uint32 lineIdx = 2;
             char *endPtr;
@@ -73,6 +92,10 @@ Model modelInit(const char *filename){
             lineIdx = (uintptr_t)endPtr- (uintptr_t)line+1;
             tFace.i0 = strtol(&line[lineIdx], &endPtr, 10);
             tFace.i0--;
+
+            lineIdx = (uintptr_t)endPtr - (uintptr_t)line+1;
+            nFace.i0 = strtol(&line[lineIdx], &endPtr, 10);
+            nFace.i0--;
 
             while(line[lineIdx] != ' ' || lineIdx == lineSize-1){
                 lineIdx++;
@@ -85,6 +108,11 @@ Model modelInit(const char *filename){
             tFace.i1 = strtol(&line[lineIdx], &endPtr, 10);
             tFace.i1--;
 
+            lineIdx = (uintptr_t)endPtr - (uintptr_t)line+1;
+            nFace.i1 = strtol(&line[lineIdx], &endPtr, 10);
+            nFace.i1--;
+
+
             while(line[lineIdx] != ' ' || lineIdx == lineSize-1){
                 lineIdx++;
             }
@@ -96,6 +124,10 @@ Model modelInit(const char *filename){
             tFace.i2 = strtol(&line[lineIdx], &endPtr, 10);
             tFace.i2--;
 
+            lineIdx = (uintptr_t)endPtr - (uintptr_t)line+1;
+            nFace.i2 = strtol(&line[lineIdx], &endPtr, 10);
+            nFace.i2--;
+
             while(line[lineIdx] != ' ' || lineIdx == lineSize-1){
                 lineIdx++;
             }
@@ -103,6 +135,8 @@ Model modelInit(const char *filename){
 
             stbds_arrpush(model.da_faces, vFace);
             stbds_arrpush(model.da_textureFaces, tFace);
+            stbds_arrpush(model.da_normalFaces, nFace);
+
         }
         i++;
     }

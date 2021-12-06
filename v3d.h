@@ -42,6 +42,7 @@ extern inline float v3d_angle_between(v3d v, v3d u);
 extern inline v3d v3d_rotate(v3d v, v3d o, float rads);
 extern inline v3d v3d_cross(v3d v, v3d u);
 
+
 #define v3d_normal v3d_unit
 
 

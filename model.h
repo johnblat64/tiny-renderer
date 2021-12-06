@@ -19,15 +19,17 @@ typedef struct Face {
     }
 } Face;
 
-typedef struct Model {
+struct Model {
     v3d *da_vertices;
     Face *da_faces;
+    v3d *da_normals;
+    Face *da_normalFaces;
     v2d *da_textureCoordinates;
     Face *da_textureFaces;
     SDL_Color *da_texture;
     Uint32 texture_w;
     Uint32 texture_h;
-} Model;
+};
 
 Model modelInit(const char *filename);
 

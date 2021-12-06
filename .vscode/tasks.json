@@ -1,21 +1,9 @@
 {
     "tasks": [
         {
-            "type": "cppbuild",
+            "type": "shell",
             "label": "C/C++: clang-10 build active file",
-            "command": "/usr/bin/clang++",
-            "args": [
-                "-fdiagnostics-color=always",
-                "-g",
-                "${workspaceFolder}/main.cpp",
-                "${workspaceFolder}/model.cpp",
-                "${workspaceFolder}/globals.cpp",
-                "${workspaceFolder}/memory.cpp",
-                "-o",
-                "${workspaceFolder}/app",
-                "-I/usr/include/SDL2",
-                "-lSDL2", "-lSDL2main", "-lm", "-lpthread"
-            ],
+            "command": "/usr/bin/clang++ -fdiagnostics-color=always -g ${workspaceFolder}/main.cpp ${workspaceFolder}/model.cpp ${workspaceFolder}/globals.cpp ${workspaceFolder}/matrix.cpp ${workspaceFolder}/r.cpp -o ${workspaceFolder}/app -I/usr/include/SDL2 -lSDL2 -lSDL2main -lm -lpthread",
             "options": {
                 "cwd": "${fileDirname}"
             },

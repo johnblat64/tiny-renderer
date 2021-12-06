@@ -2,7 +2,7 @@
 #define matrix_h
 
 #include "stb_ds.h"
-#include "memory.h"
+#include "v3d.h"
 #include "v4d.h"
 
 // struct Matrix{   
@@ -88,49 +88,24 @@
 //     return result;
 // }
 
+extern float *g_zBuffer;
 
 struct TransformMatrix{
-    float m[4][4];
+    float _[4][4];
+
+    // float * &operator[](const uint32_t i){
+
+    //     return &_[i];
+    // } 
 };
 
 
-TransformMatrix genIdTransformMatrix(int n){
-    TransformMatrix tm = {0};
-    for(int i = 0; i < n; i++){
-        for(int j = 0; j < n; j++){
-            tm.m[i][j] = (i==j ? 1.0f : 0.0f);
-        }
-    }
-    return tm;
-}
 
+v3d m2v(TransformMatrix tm);
+TransformMatrix genIdTransformMatrix();
+TransformMatrix operator*(TransformMatrix lhs, TransformMatrix rhs);
+v4d operator*(TransformMatrix lhs, v4d rhs);
 
-TransformMatrix operator*(TransformMatrix lhs, TransformMatrix rhs){
-    TransformMatrix result;
-    const uint32_t n = 4;
-    for(int i = 0; i < n; i++){
-        for(int j = 0; j < n; j++){
-            result.m[i][j] = 0.0f;
-            for(int k = 0; k < n; k++){
-                result.m[i][j] += lhs.m[i][k] * rhs.m[k][j];
-            }
-        }
-    }
-    return result;
-}
-
-
-TransformMatrix operator*(TransformMatrix lhs, v4d rhs){
-    TransformMatrix result;
-    const uint32_t n = 4;
-    for(int i = 0; i < n; i++){
-        result.m[i][0] = 0.0f;
-        for(int k = 0; k < n; k++){
-            result.m[i][0] += lhs.m[i][k] * rhs[k];
-        }
-    }
-    return result;
-}
 
 
 
