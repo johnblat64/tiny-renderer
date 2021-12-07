@@ -38,17 +38,19 @@ TransformMatrix lookAt(v3d eye, v3d center, v3d up){
     v3d z = v3d_normal(eye - center);
     v3d x = v3d_normal(v3d_cross(up, z));
     v3d y = v3d_normal(v3d_cross(z, x));
-    TransformMatrix Minv = genIdTransformMatrix();
-    TransformMatrix Tr = genIdTransformMatrix();
+    // TransformMatrix Minv = genIdTransformMatrix();
+    // TransformMatrix Tr = genIdTransformMatrix();
+    TransformMatrix modelView = genIdTransformMatrix();
     for(int i = 0; i < 3; i++){
-        Minv._[0][i] = x[i];
-        Minv._[1][i] = y[i];
-        Minv._[2][i] = z[i];
-        Tr._[i][3] = -center[i];
+        modelView._[0][i] = x[i];
+        modelView._[1][i] = y[i];
+        modelView._[2][i] = z[i];
+        modelView._[i][3] = -center[i];
     }
-    TransformMatrix modelView = Minv*Tr;
+
     return modelView;
 }
+
 
 
 inline void R_putPixel(v2d canvasPoint, Uint32 color){
@@ -60,7 +62,7 @@ inline void R_putPixel(v2d canvasPoint, Uint32 color){
     // }
 
     // v2di screenPoint = canvasPointToScreenPoint(canvasPoint);
-    v2di screenPoint = v2di((int)canvasPoint.x, (int)canvasPoint.y);
+    v2di screenPoint = v2di((int)canvasPoint.x, gCanvasDimensions.y - (int)canvasPoint.y);
     unsigned int idx = (screenPoint.y * gWindowSurface->w) + screenPoint.x;
     // uint32_t colorU32 = SDL_MapRGBA(
     //     gWindowSurface->format,
@@ -207,7 +209,7 @@ v4d gouradVertexShader(uint32_t iface, uint32_t nthvert, Model *model){
     gouradVaryingIntensity[nthvert] = max(0.0f, n*gLightDir);
     Face vFace = model->da_faces[iface];
     v3d vert = model->da_vertices[vFace[nthvert]];
-    v4d vert4d(vert.x, -vert.y, vert.z, 1.0f);
+    v4d vert4d(vert.x, vert.y, vert.z, 1.0f);
     v4d result = viewportMatrix * projectionMatrix * modelViewMatrix * vert4d;
     // v4d resultv4d(
     //     resultM._[0][0], 

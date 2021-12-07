@@ -23,7 +23,7 @@ TransformMatrix genIdTransformMatrix(){
 
 
 TransformMatrix operator*(TransformMatrix lhs, TransformMatrix rhs){
-    TransformMatrix result;
+    TransformMatrix result = {0};
     const uint32_t n = 4;
     for(int i = 0; i < n; i++){
         for(int j = 0; j < n; j++){

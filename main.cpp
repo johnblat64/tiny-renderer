@@ -125,9 +125,15 @@ int main(){
             gCanvasDimensions.x*3/4, 
             gCanvasDimensions.y*3/4
         );
-        projectionMatrix._[3][2] = -1.0f/(eye-center).z;
-
-    
+        // viewportMatrix = genViewportTransformMatrix(
+        //     200,
+        //     200,
+        //     gCanvasDimensions.x/2, 
+        //     gCanvasDimensions.y/2
+        // );
+        projectionMatrix._[3][2] = -1.0f/v3d_magnitude(eye-center);
+// projectionMatrix._[3][2] = -1.0f/(eye-center).z;
+        gLightDir = v3d_unit(gLightDir);
 
         Uint32 bgColor = SDL_MapRGB(
             gWindowSurface->format,
