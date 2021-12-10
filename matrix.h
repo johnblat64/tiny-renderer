@@ -107,6 +107,11 @@ TransformMatrix operator*(TransformMatrix lhs, TransformMatrix rhs);
 v4d operator*(TransformMatrix lhs, v4d rhs);
 
 
+struct UVMatrix{
+    float _[2][3];
+};
+
+v3d operator*(UVMatrix lhs, v3d rhs);
 
 
 #endif

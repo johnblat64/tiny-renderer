@@ -167,7 +167,7 @@ int main(){
             v2di textureCoords[3];
 
             for(int j = 0; j < 3; j++){
-                screenCoords[j] = gouradVertexShader(i, j, &model);
+                screenCoords[j] = textureShadingVertexShader(i, j, &model);
                 v2d vtc = model.da_textureCoordinates[tFace[j]];
                 textureCoords[j].x = (vtc.x)*model.texture_w;
                 textureCoords[j].y = (vtc.y)*(model.texture_h);

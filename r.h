@@ -15,9 +15,10 @@ TransformMatrix lookAt(v3d eye, v3d center, v3d up);
 void R_drawTriangleTextured(v4d *vertices, SDL_Color *texture, Uint32 texture_w, v2di *textureCoords);
 
 extern v3d gouradVaryingIntensity;
-v4d gouradVertexShader(uint32_t iface, uint32_t nthvert, Model *model);
-bool gouradFragmentShader(v3d bar, SDL_Color *color);
-
+v4d gouradVertexSolidShader(uint32_t iface, uint32_t nthvert, Model *model);
+bool gouradFragmentSolidShader(v3d bar, SDL_Color *color);
+v4d textureShadingVertexShader(uint32_t iface, uint32_t nthvert, Model *model);
+bool textureShadingFragmentShader(v3d bar, SDL_Color *color);
 
 
 #endif

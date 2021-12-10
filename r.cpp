@@ -14,11 +14,18 @@
 const uint32_t depth = 255;
 
 v3d gouradVaryingIntensity(0,0,0);
-
+UVMatrix varyingUV;
 
 //ZBUFFER
 float *g_zBuffer; 
 
+// struct Shader {
+//     v3d gouradVaryingIntensity;
+//     UVMatrix varyingUV;
+
+//     v4d (* vertexShaderFn)(uint32_t iface, uint32_t nthvert, Model *model);
+//     bool (* fragmentShaderFn)(uint32_t);
+// };
 
 TransformMatrix genViewportTransformMatrix(int x, int y, int w, int h){
     TransformMatrix tm = genIdTransformMatrix();
@@ -168,7 +175,7 @@ void R_drawTriangleTextured(v4d *vertices, SDL_Color *texture, Uint32 texture_w,
             //     (Uint8)(lightIntensity*color.b),
             //     255
             // };
-            bool discard = gouradFragmentShader(bcScreen, &color);
+            bool discard = textureShadingFragmentShader(bcScreen, &color);
             if(!discard){
                 Uint32 color32 = SDL_MapRGB(gWindowSurface
                 ->format, color.r, color.g, color.b);
@@ -194,7 +201,7 @@ void R_drawTriangleTextured(v4d *vertices, SDL_Color *texture, Uint32 texture_w,
     }
 }
 
-v4d gouradVertexShader(uint32_t iface, uint32_t nthvert, Model *model){
+v4d gouradVertexSolidShader(uint32_t iface, uint32_t nthvert, Model *model){
     if(nthvert > 3){
         assert(0 && "nthvert out of bounds for gourad vertex shader\n");
     }
@@ -220,13 +227,81 @@ v4d gouradVertexShader(uint32_t iface, uint32_t nthvert, Model *model){
     return result;
 }
 
-bool gouradFragmentShader(v3d bar, SDL_Color *color){
+bool gouradFragmentSolidShader(v3d bar, SDL_Color *color){
     swapValues(bar.x, bar.z, float);
     swapValues(bar.z, bar.y, float);
     float intensity = gouradVaryingIntensity*bar;
     color->r = 255 * intensity;
     color->g = 255 * intensity;
     color->b = 255 * intensity;
+    return false;   
+    // return false;
+}
+
+bool cellShadingFragmentShader(v3d bar, SDL_Color *color){
+    swapValues(bar.x, bar.z, float);
+    swapValues(bar.z, bar.y, float);
+    float intensity = gouradVaryingIntensity*bar;
+    // color->r = 255 * intensity;
+    // color->g = 255 * intensity;
+    // color->b = 255 * intensity;
+    if (intensity>.85) intensity = 1;
+    else if (intensity>.60) intensity = .80;
+    else if (intensity>.45) intensity = .60;
+    else if (intensity>.30) intensity = .45;
+    else if (intensity>.15) intensity = .30;
+    else intensity = 0;
+    color->r = 0 * intensity;
+    color->g =  0 * intensity;
+    color->b =  255*intensity;
+    return false;   
+    // return false;
+}
+
+v4d textureShadingVertexShader(uint32_t iface, uint32_t nthvert, Model *model){
+    Face tFace = model->da_textureFaces[iface];
+    v2d uv = model->da_textureCoordinates[tFace[nthvert]];
+    varyingUV._[0][nthvert] = uv.x;
+    varyingUV._[1][nthvert] = uv.y;
+
+    Face nFace = model->da_normalFaces[iface];
+    v3d n = model->da_normals[nFace[nthvert]];
+    float nDotLightDir = n*gLightDir;
+
+    gouradVaryingIntensity[nthvert] = max(0.0f, n*gLightDir); //diffuse lighting intensity
+
+    Face vFace = model->da_faces[iface];
+    v3d vert = model->da_vertices[vFace[nthvert]];
+    v4d vert4d(vert.x, vert.y, vert.z, 1.0f);
+    v4d result = viewportMatrix * projectionMatrix * modelViewMatrix * vert4d;
+
+    return result;
+}
+
+
+bool textureShadingFragmentShader(v3d bar, SDL_Color *color){
+    swapValues(bar.x, bar.z, float);
+    swapValues(bar.z, bar.y, float);
+    float intensity = gouradVaryingIntensity*bar;
+
+
+    color->r *= intensity;
+    color->g *= intensity;
+    color->b *= intensity;
 
     return false;
 }
+
+// bool textureShadingFragmentShader(v3d bar, SDL_Color *color, SDL_Color *texture, uint32_t tw){
+ 
+//     float intensity = gouradVaryingIntensity.x;
+//     // v3d uv3 = varyingUV*bar;
+//     // v2d uv(uv3.x, uv3.y);
+//     // uint32_t tidx = (int)uv.x + (int)uv.y * tw;
+//     // *color = texture[tidx];
+//     color->r *= intensity;
+//     color->g *= intensity;
+//     color->b *= intensity;
+
+//     return false;
+// }

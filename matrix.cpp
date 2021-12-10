@@ -49,3 +49,17 @@ v4d operator*(TransformMatrix lhs, v4d rhs){
     }
     return result;
 }
+
+v3d operator*(UVMatrix lhs, v3d rhs){
+    // TransformMatrix result;
+    v3d result;
+    const uint32_t nRows = 2;
+    const uint32_t nCols = 3;
+    for(int i = 0; i < nRows; i++){
+        result[i] = 0.0f;
+        for(int k = 0; k < nCols; k++){
+            result[i]+= lhs._[i][k] * rhs[k];
+        }
+    }
+    return result;
+}
