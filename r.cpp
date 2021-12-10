@@ -124,11 +124,11 @@ static v2d getP(v3d bcScreen, v2d *pts){
 }
 
 
-void R_drawTriangleTextured(v4d *vertices, SDL_Color *texture, Uint32 texture_w, v2di *textureCoords){
-    v2d tcs_f[3];
-    for(int i = 0; i < 3; i++){
-        tcs_f[i] = v2d(textureCoords[i].x, textureCoords[i].y);
-    }
+void R_drawTriangleTextured(v4d *vertices, Model *model, uint32_t iface){
+    // v2d tcs_f[3];
+    // for(int i = 0; i < 3; i++){
+    //     tcs_f[i] = v2d(textureCoords[i].x, textureCoords[i].y);
+    // }
     
     //sort
     v2d bboxMin = {
@@ -168,7 +168,7 @@ void R_drawTriangleTextured(v4d *vertices, SDL_Color *texture, Uint32 texture_w,
 
             
             SDL_Color color;
-            bool discard = textureShadingFragmentShader(bcScreen, texture, tcs_f, texture_w, &color);
+            bool discard = textureShadingFragmentShader(bcScreen, iface, model, &color);
             if(!discard){
                 Uint32 color32 = SDL_MapRGB(gWindowSurface
                 ->format, color.r, color.g, color.b);
@@ -272,7 +272,17 @@ v4d textureShadingVertexShader(uint32_t iface, uint32_t nthvert, Model *model){
 }
 
 
-bool textureShadingFragmentShader(v3d bar, SDL_Color *texture, v2d *textureCoords, uint32_t texture_w, SDL_Color *colorOut){
+bool textureShadingFragmentShader(v3d bar, uint32_t iface, Model *model, SDL_Color *colorOut){
+    v2d textureCoords[3];
+    Face tFace = model->da_textureFaces[iface];
+
+    for(int i = 0; i < 3; i++){
+        v2d vtc = model->da_textureCoordinates[tFace[i]];
+        textureCoords[i].x = (vtc.x)*model->texture_w;
+        textureCoords[i].y = (vtc.y)*(model->texture_h);
+        textureCoords[i].y = model->texture_h - textureCoords[i].y;  
+    }
+
     v2d tc = getP(bar, textureCoords);
 
     swapValues(bar.x, bar.z, float);
@@ -280,8 +290,8 @@ bool textureShadingFragmentShader(v3d bar, SDL_Color *texture, v2d *textureCoord
     float intensity = gouradVaryingIntensity*bar;
 
     
-    Uint32 idx = (int)tc.x + (int)tc.y * texture_w;
-    SDL_Color color = texture[idx];
+    Uint32 idx = (int)tc.x + (int)tc.y * model->texture_w;
+    SDL_Color color = model->da_texture[idx];
     
     colorOut->r = color.r * intensity;
     colorOut->g = color.g * intensity;

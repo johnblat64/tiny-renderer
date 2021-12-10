@@ -161,25 +161,19 @@ int main(){
             Face tFace = model.da_textureFaces[i];
 
             v4d screenCoords[3];
-            v3d xscreenCoords[3];
 
             v3d worldCoords[3];
-            v2di textureCoords[3];
 
             for(int j = 0; j < 3; j++){
                 screenCoords[j] = textureShadingVertexShader(i, j, &model);
-                v2d vtc = model.da_textureCoordinates[tFace[j]];
-                textureCoords[j].x = (vtc.x)*model.texture_w;
-                textureCoords[j].y = (vtc.y)*(model.texture_h);
-                textureCoords[j].y = model.texture_h - textureCoords[j].y;  
+                
             }
 
             
             R_drawTriangleTextured(
                 screenCoords,
-                model.da_texture,
-                model.texture_w,
-                textureCoords
+                &model,
+                i
             );
 
             
