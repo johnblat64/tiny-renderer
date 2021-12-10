@@ -157,7 +157,6 @@ void R_drawTriangleTextured(v4d *vertices, SDL_Color *texture, Uint32 texture_w,
     for(P.y = (int)bboxMin.y; P.y <= (int)bboxMax.y; P.y++){
         for(P.x = (int)bboxMin.x; P.x <= (int)bboxMax.x; P.x++){
             v3d bcScreen = baycentric(v2ds, v2d(P.x, P.y));
-            v2d tc = getP(bcScreen, tcs_f);
 
             if(bcScreen.x < 0.0f || bcScreen.y < 0.0f || bcScreen.z < 0.0f){
                 continue;
@@ -167,15 +166,9 @@ void R_drawTriangleTextured(v4d *vertices, SDL_Color *texture, Uint32 texture_w,
                 P.z += vertices[i].z * bcScreen[i];
             }
 
-            Uint32 idx = (int)tc.x + (int)tc.y * texture_w;
-            SDL_Color color = texture[idx];
-            // SDL_Color li_color = {
-            //     (Uint8)(lightIntensity*color.r),
-            //     (Uint8)(lightIntensity*color.g),
-            //     (Uint8)(lightIntensity*color.b),
-            //     255
-            // };
-            bool discard = textureShadingFragmentShader(bcScreen, &color);
+            
+            SDL_Color color;
+            bool discard = textureShadingFragmentShader(bcScreen, texture, tcs_f, texture_w, &color);
             if(!discard){
                 Uint32 color32 = SDL_MapRGB(gWindowSurface
                 ->format, color.r, color.g, color.b);
@@ -279,16 +272,20 @@ v4d textureShadingVertexShader(uint32_t iface, uint32_t nthvert, Model *model){
 }
 
 
-bool textureShadingFragmentShader(v3d bar, SDL_Color *color){
+bool textureShadingFragmentShader(v3d bar, SDL_Color *texture, v2d *textureCoords, uint32_t texture_w, SDL_Color *colorOut){
+    v2d tc = getP(bar, textureCoords);
+
     swapValues(bar.x, bar.z, float);
     swapValues(bar.z, bar.y, float);
     float intensity = gouradVaryingIntensity*bar;
 
-
-    color->r *= intensity;
-    color->g *= intensity;
-    color->b *= intensity;
-
+    
+    Uint32 idx = (int)tc.x + (int)tc.y * texture_w;
+    SDL_Color color = texture[idx];
+    
+    colorOut->r = color.r * intensity;
+    colorOut->g = color.g * intensity;
+    colorOut->b = color.b * intensity;
     return false;
 }
 
