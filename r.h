@@ -15,7 +15,7 @@ struct R_Shader{
     TransformMatrix uniformMatrix; // Projection * ModelView
     TransformMatrix uniformMatrixInverseTranspose; // (Projection * ModelView) inverted and transposed
     v4d (* vertexShaderFn)(uint32_t iface, uint32_t nthvert, Model *model);
-    bool (* fragmentShaderFn)(v3d bar, SDL_Color *color);
+    bool (* fragmentShaderFn)(v3d bar, uint32_t iface, Model *model, SDL_Color *colorOut);
 };
 
 void R_putPixel(v2d worldPoint, Uint32 color);

@@ -99,12 +99,16 @@ struct TransformMatrix{
     // } 
 };
 
-
+struct MinorMatrix{
+    float _[3][3];
+};
 
 v3d m2v(TransformMatrix tm);
 TransformMatrix genIdTransformMatrix();
 TransformMatrix operator*(TransformMatrix lhs, TransformMatrix rhs);
 v4d operator*(TransformMatrix lhs, v4d rhs);
+TransformMatrix adjugate();
+
 
 
 struct UVMatrix{

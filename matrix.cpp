@@ -50,6 +50,23 @@ v4d operator*(TransformMatrix lhs, v4d rhs){
     return result;
 }
 
+
+
+
+// float cofactor(TransformMatrix m, uint32_t row, uint32_t col){
+
+// }
+
+// TransformMatrix adjugate(){
+//     TransformMatrix result;
+//     for(int i = 4; i >= 0; i--){
+//         for(int j = 4; j >= 0; j--){
+//             result[i][j]
+//         }
+//     }
+// }
+
+
 v3d operator*(UVMatrix lhs, v3d rhs){
     // TransformMatrix result;
     v3d result;

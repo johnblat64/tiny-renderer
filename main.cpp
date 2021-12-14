@@ -68,6 +68,9 @@ int main(){
         g_zBuffer[i] =  -FLT_MAX;
     }
 
+    R_Shader shader;
+    shader.vertexShaderFn = textureShadingVertexShader;
+    shader.fragmentShaderFn = textureShadingFragmentShader;
     
 
     SDL_bool quit = SDL_FALSE;
